@@ -7,20 +7,19 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.http.*;
+import org.springframework.http.*; 
 import org.springframework.web.client.RestTemplate;
 
-import org.springframework.http.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
 @SpringBootApplication
-public class demo implements CommandLineRunner {
+public class DemoApplication implements CommandLineRunner {
 
     private static final String INIT_URL = "https://bfhldevapigw.healthrx.co.in/hiring/generateWebhook/JAVA";
 
     public static void main(String[] args) {
-        SpringApplication.run(demo.class, args);
+        SpringApplication.run(DemoApplication.class, args);
     }
 
     @Override
@@ -28,72 +27,34 @@ public class demo implements CommandLineRunner {
         RestTemplate restTemplate = new RestTemplate();
         ObjectMapper mapper = new ObjectMapper();
 
-        // Step 1: Send initial POST request
+
         Map<String, String> requestBody = new HashMap<>();
-        requestBody.put("name", "Adwaith Shyju M"); // I've used your name from the resume
-        requestBody.put("regNo", "22BAI10292"); // Use your actual registration number
-        requestBody.put("email", "adwaithshyju2022@vitbhopal.ac.in"); // I've used your email from the resume
+        requestBody.put("name", "Adwaith Shyju M");
+        requestBody.put("regNo", "22BAI10292");
+        requestBody.put("email", "adwaithshyju2022@vitbhopal.ac.in");
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-
         HttpEntity<Map<String, String>> entity = new HttpEntity<>(requestBody, headers);
         ResponseEntity<JsonNode> response = restTemplate.postForEntity(INIT_URL, entity, JsonNode.class);
 
         if (!response.getStatusCode().is2xxSuccessful()) {
-            System.err.println("Failed to get webhook response");
+            System.err.println("Failed to get webhook response. Status: " + response.getStatusCode());
+            System.err.println("Response Body: " + response.getBody());
             return;
         }
 
         JsonNode body = response.getBody();
+        System.out.println("DEBUG: Server Response Body: " + body.toPrettyString()); 
+
         String webhookUrl = body.get("webhook").asText().trim();
         String accessToken = body.get("accessToken").asText().trim();
-        JsonNode usersData = body.get("data").get("users");
 
-        // Step 2: Parse users
-        List<User> users = new ArrayList<>();
-        for (JsonNode node : usersData) {
-            int id = node.get("id").asInt();
-            List<Integer> follows = new ArrayList<>();
-            for (JsonNode follow : node.get("follows")) {
-                follows.add(follow.asInt());
-            }
-            users.add(new User(id, follows));
-        }
+        Object outcome = "The final answer required by the challenge";
 
-        // V V V V V V V V V V V V V V V V V V V V V V V V V V V V V V V V V V V V V V V V V //
-        // REPLACE THE LOGIC BELOW WITH YOUR NEW SOLUTION                                    //
-        // The current example finds the user ID that follows the most other users.          //
-
-        // Step 3: Process the data to solve the new problem
-        int maxFollows = -1;
-        int userWithMaxFollows = -1;
-
-        for (User user : users) {
-            if (user.follows.size() > maxFollows) {
-                maxFollows = user.follows.size();
-                userWithMaxFollows = user.id;
-            }
-        }
-
-        // Step 4: Prepare outcome
-        // The 'outcome' object should be formatted exactly as the new problem requires.
-        Object outcome;
-
-        if (userWithMaxFollows != -1) {
-            // Example: The problem might ask for the ID of the user with the most follows.
-            outcome = userWithMaxFollows;
-        } else {
-            // Provide a default outcome if needed
-            outcome = "No users found";
-        }
-
-        // REPLACE THE LOGIC ABOVE WITH YOUR NEW SOLUTION                                    //
-        // ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ //
-
-        // Step 5: Send result to webhook
+    
         Map<String, Object> finalPayload = new HashMap<>();
-        finalPayload.put("regNo", "REG12347"); // Use your actual registration number
+        finalPayload.put("regNo", "22BAI10292");
         finalPayload.put("outcome", outcome);
 
         headers = new HttpHeaders();
